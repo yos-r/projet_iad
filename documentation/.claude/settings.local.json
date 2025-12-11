@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(javac:*)",
-      "Bash(java:*)"
+      "Bash(java:*)",
+      "Bash(Select-String -Pattern \"error\" -Context 2)"
     ],
     "deny": [],
     "ask": []

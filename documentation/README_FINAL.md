@@ -1,9 +1,8 @@
 # 🏭 FESTO CP Factory - RLRA Multi-Agent System
 
-**Auteur:** Eya Ben El Kadhi  
+**Auteurs:** Yosr Barghouti / Eya Belkadhi 3IDL2
 **Date:** Décembre 2025  
 **Projet:** Intelligence Artificielle Distribuée (IAD) - Mini-projet  
-**Framework:** JADE (Java Agent Development Environment)
 
 ---
 
