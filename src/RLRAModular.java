@@ -55,13 +55,21 @@ public class RLRAModular extends BaseAgent {
     private void handleReconfigurationRequest(Message message) {
         // Step 1: Monitor module receives the request
         Map<String, Object> request = (Map<String, Object>) message.getPayload();
+        
+        System.out.println("\n[ACL] FROM " + message.getSenderId() + 
+                           " TO " + id + 
+                           " TYPE REQUEST CONTENT '" + 
+                           request.get("affectedMachine") + "'");
+        
+        System.out.println("[" + id + "] Received RECONFIGURATION_REQUEST - Processing...");
         monitorModule.receiveRequest(request);
 
         // Step 2: Learner makes decision based on current state
         String strategy = learnerModule.decidePlan(request);
+        System.out.println("[" + id + "] Selected strategy: " + strategy);
 
         // Step 3: Executor carries out the plan
-        executorModule.executePlan(strategy, (String) request.get("affectedMachine"));
+        executorModule.executePlan(strategy, (String) request.get("affectedMachine"), request);
     }
 
     @Override
@@ -125,21 +133,52 @@ public class RLRAModular extends BaseAgent {
         public String decidePlan(Map<String, Object> request) {
             String affectedMachine = (String) request.get("affectedMachine");
             String issue = (String) request.get("issue");
-
-            System.out.println("[" + id + "] Analyzing situation for " + affectedMachine);
+            
+            // Déterminer le scénario
+            ReconfigurationScenario scenario = detectScenario(issue);
+            System.out.println("[" + id + "] Detected scenario: " + scenario.name());
 
             String strategy;
-            if (issue.contains("fail")) {
-                strategy = "STRATEGY_REASSIGNMENT";
-            } else if (issue.contains("slow")) {
-                strategy = "STRATEGY_ACCELERATION";
+            
+            if (scenario == ReconfigurationScenario.MACHINE_FAILURE) {
+                if (issue.contains("Spindle") || issue.contains("belt")) {
+                    strategy = "STRATEGY_BYPASS";
+                    System.out.println("[" + id + "] Machine failure detected (Spindle/Belt)");
+                    System.out.println("[" + id + "] → Analyzing alternatives...");
+                    System.out.println("[" + id + "] → Decision: BYPASS available");
+                } else {
+                    strategy = "STRATEGY_REASSIGNMENT";
+                    System.out.println("[" + id + "] Machine failure detected (Gripper)");
+                    System.out.println("[" + id + "] → Analyzing alternatives...");
+                    System.out.println("[" + id + "] → Decision: REASSIGNMENT available");
+                }
+            } else if (scenario == ReconfigurationScenario.PRODUCTION_PEAK) {
+                strategy = "STRATEGY_ACCELERATION_MODE";
+                System.out.println("[" + id + "] Production peak detected");
+                System.out.println("[" + id + "] → Analyzing capacity...");
+                System.out.println("[" + id + "] → Decision: ACTIVATE ACCELERATION");
+            } else if (scenario == ReconfigurationScenario.PRODUCT_CHANGE) {
+                strategy = "STRATEGY_PRODUCT_RECONFIGURATION";
+                System.out.println("[" + id + "] Product change detected");
+                System.out.println("[" + id + "] → Analyzing requirements...");
+                System.out.println("[" + id + "] → Decision: RECONFIGURE MACHINES");
             } else {
                 strategy = "STRATEGY_BYPASS";
             }
 
             decisionHistory.add(strategy);
-            System.out.println("[" + id + "] Decision: " + strategy);
+            System.out.println("[" + id + "] ✓ Final decision: " + strategy);
             return strategy;
+        }
+
+        private ReconfigurationScenario detectScenario(String issue) {
+            if (issue.contains("peak") || issue.contains("urgent")) {
+                return ReconfigurationScenario.PRODUCTION_PEAK;
+            } else if (issue.contains("product") || issue.contains("change")) {
+                return ReconfigurationScenario.PRODUCT_CHANGE;
+            } else {
+                return ReconfigurationScenario.MACHINE_FAILURE;
+            }
         }
 
         public void step() {
@@ -165,31 +204,63 @@ public class RLRAModular extends BaseAgent {
             machines.put(machine.getId(), machine);
         }
 
-        public void executePlan(String strategy, String affectedMachine) {
-            System.out.println("[" + id + "] Executing plan: " + strategy + " for " + affectedMachine);
+        public void executePlan(String strategy, String affectedMachine, Map<String, Object> request) {
+            System.out.println("[" + id + "] Starting execution of plan: " + strategy);
+            System.out.println("[" + id + "] Target machine: " + affectedMachine);
 
             switch (strategy) {
                 case "STRATEGY_BYPASS":
-                    machines.get(affectedMachine).receiveMessage(
-                        new Message(id, affectedMachine, Message.MessageType.EXECUTE_ACTION, "BYPASS"));
+                    System.out.println("[" + id + "] → Sending BYPASS command to " + affectedMachine);
+                    System.out.println("[" + id + "] → Rerouting traffic to downstream machines");
+                    if (machines.containsKey(affectedMachine)) {
+                        machines.get(affectedMachine).receiveMessage(
+                            new Message(id, affectedMachine, Message.MessageType.EXECUTE_ACTION, "BYPASS"));
+                    }
+                    executionHistory.add("BYPASS_" + affectedMachine);
                     break;
+
                 case "STRATEGY_REASSIGNMENT":
-                    // Reassign to another operational machine
+                    System.out.println("[" + id + "] → Finding operational alternative machine");
                     for (MachineAgent machine : machines.values()) {
                         if (!machine.getId().equals(affectedMachine) &&
                             machine.getState().getStatus() == MachineState.Status.OPERATIONAL) {
-                            System.out.println("[" + id + "] Reassigning work to " + machine.getId());
+                            System.out.println("[" + id + "] → Reassigning work to " + machine.getId());
+                            System.out.println("[" + id + "] → Notifying " + machine.getId() + " of new responsibilities");
+                            executionHistory.add("REASSIGNMENT_TO_" + machine.getId());
                             break;
                         }
                     }
                     break;
+
+                case "STRATEGY_ACCELERATION_MODE":
+                    System.out.println("[" + id + "] → Activating acceleration mode on all machines");
+                    for (MachineAgent machine : machines.values()) {
+                        System.out.println("[" + id + "] → Increasing speed of " + machine.getId());
+                        machine.receiveMessage(
+                            new Message(id, machine.getId(), Message.MessageType.EXECUTE_ACTION, "ACCELERATE"));
+                    }
+                    executionHistory.add("ACCELERATION_MODE_ACTIVE");
+                    break;
+
+                case "STRATEGY_PRODUCT_RECONFIGURATION":
+                    System.out.println("[" + id + "] → Reconfiguring all machines for new product");
+                    for (MachineAgent machine : machines.values()) {
+                        System.out.println("[" + id + "] → Updating program for " + machine.getId());
+                    }
+                    executionHistory.add("PRODUCT_RECONFIGURATION_" + (String)request.getOrDefault("newProduct", "BETA"));
+                    break;
+
                 case "STRATEGY_ACCELERATION":
-                    machines.get(affectedMachine).receiveMessage(
-                        new Message(id, affectedMachine, Message.MessageType.EXECUTE_ACTION, "ACCELERATE"));
+                    System.out.println("[" + id + "] → Sending ACCELERATE command to " + affectedMachine);
+                    if (machines.containsKey(affectedMachine)) {
+                        machines.get(affectedMachine).receiveMessage(
+                            new Message(id, affectedMachine, Message.MessageType.EXECUTE_ACTION, "ACCELERATE"));
+                    }
+                    executionHistory.add("ACCELERATION_" + affectedMachine);
                     break;
             }
 
-            executionHistory.add(strategy);
+            System.out.println("[" + id + "] ✓ Execution completed");
         }
 
         public void handleActionResult(Message message) {

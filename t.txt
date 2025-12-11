@@ -1,1 +1,0 @@
-java -cp "bin;lib/*" jade.Boot -gui -agents "sender:projectsma.SenderAgent;worker1:projectsma.ReceiverAgent;worker2:projectsma.ReceiverAge

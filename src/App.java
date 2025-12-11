@@ -68,8 +68,10 @@ public class App {
      */
     private static void demonstrateArchitectures() {
         demonstrateCentralizedArchitecture();
+        MessageBroker.getInstance().restart();  // Restart broker between architectures
         System.out.println("\n" + "=".repeat(50) + "\n");
         demonstrateModularArchitecture();
+        MessageBroker.getInstance().restart();  // Restart broker between architectures
         System.out.println("\n" + "=".repeat(50) + "\n");
         demonstrateDistributedArchitecture();
     }
@@ -88,6 +90,8 @@ public class App {
         simulation.run(2);
 
         // Simulate a machine failure
+        System.out.println("\n[SCENARIO] Running MACHINE_FAILURE scenario using CENTRALIZED RLRA");
+        System.out.println("[SCENARIO] Simulating Spindle motor failure on M2_Machining");
         simulation.simulateMachineFailure("M2_Machining", "Spindle motor failure");
 
         // Continue simulation
@@ -112,6 +116,8 @@ public class App {
         simulation.run(2);
 
         // Simulate a machine failure
+        System.out.println("\n[SCENARIO] Running MACHINE_FAILURE scenario using MODULAR RLRA");
+        System.out.println("[SCENARIO] Simulating Gripper malfunction on M3_Assembly");
         simulation.simulateMachineFailure("M3_Assembly", "Gripper malfunction");
 
         // Continue simulation
@@ -136,6 +142,9 @@ public class App {
         simulation.run(2);
 
         // Simulate a machine failure
+        System.out.println("\n[SCENARIO] Running MACHINE_FAILURE scenario using DISTRIBUTED RLRA");
+        System.out.println("[SCENARIO] Simulating Conveyor belt failure on M1_Distribution");
+        System.out.println("[SCENARIO] Testing multi-site coordination and conflict resolution");
         simulation.simulateMachineFailure("M1_Distribution", "Conveyor belt stuck");
 
         // Continue simulation

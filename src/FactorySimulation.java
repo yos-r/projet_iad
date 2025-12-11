@@ -8,6 +8,7 @@ public class FactorySimulation {
     private RLRAFactory.ArchitectureType architectureType;
     private Map<String, MachineAgent> machines;
     private Map<String, MonitorAgent> monitors;
+    private TransportAgent transport;
     private int simulationSteps;
     private MessageBroker messageBroker;
 
@@ -31,6 +32,10 @@ public class FactorySimulation {
         // Create machines for Site B
         MachineAgent m3 = createMachine("M3_Assembly", 3);
         MachineAgent m4 = createMachine("M4_QualityControl", 2);
+
+        // Create transport agent between sites
+        transport = new TransportAgent("T1_Transport", "SITE_A", "SITE_B", 4, 20);
+        System.out.println("Created transport: T1_Transport (buffer capacity: 20 parts)");
 
         // Create monitors
         MonitorAgent monitorA = createMonitor("Monitor_SiteA", "SITE_A");
@@ -188,5 +193,17 @@ public class FactorySimulation {
             machine.stop();
         }
         messageBroker.stop();
+    }
+
+    public TransportAgent getTransport() {
+        return transport;
+    }
+
+    public Map<String, MachineAgent> getMachines() {
+        return machines;
+    }
+
+    public BaseAgent getRLRA() {
+        return rlra;
     }
 }

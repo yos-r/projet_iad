@@ -100,6 +100,15 @@ public class MessageBroker {
     }
 
     /**
+     * Restarts the message broker for a new simulation.
+     */
+    public void restart() {
+        running = true;
+        mailboxes.clear();
+        messageLog.clear();
+    }
+
+    /**
      * Prints message statistics.
      */
     public void printStatistics() {
