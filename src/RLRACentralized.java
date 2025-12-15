@@ -1,17 +1,26 @@
 import java.util.*;
 
 /**
- * Centralized RLRA Architecture
+ * Architecture RLRA Centralisée
  *
- * Single controller makes all reconfiguration decisions.
- * Advantages: Simple, deterministic
- * Disadvantages: Single point of failure, potential bottleneck
+ * Un contrôleur unique prend toutes les décisions de reconfiguration.
+ * Avantages : Simple, déterministe, vision globale
+ * Inconvénients : Point unique de défaillance, goulot d'étranglement potentiel
  */
 public class RLRACentralized extends BaseAgent {
+    // Map des agents moniteurs enregistrés (un par site)
     private Map<String, MonitorAgent> monitors;
+
+    // Map des agents machines enregistrés
     private Map<String, MachineAgent> machines;
+
+    // Historique des reconfigurations effectuées
     private List<String> reconfigurationHistory;
 
+    /**
+     * Constructeur de l'agent RLRA centralisé
+     * @param id Identifiant unique de l'agent
+     */
     public RLRACentralized(String id) {
         super(id, "RLRA_Centralized");
         this.monitors = new HashMap<>();
@@ -20,26 +29,34 @@ public class RLRACentralized extends BaseAgent {
     }
 
     /**
-     * Register a monitor agent.
+     * Enregistre un agent moniteur dans le système
+     * @param monitor Agent moniteur à enregistrer
      */
     public void registerMonitor(MonitorAgent monitor) {
         monitors.put(monitor.getId(), monitor);
     }
 
     /**
-     * Register a machine agent.
+     * Enregistre un agent machine dans le système
+     * @param machine Agent machine à enregistrer
      */
     public void registerMachine(MachineAgent machine) {
         machines.put(machine.getId(), machine);
     }
 
+    /**
+     * Gère les messages reçus par l'agent RLRA
+     * @param message Message à traiter
+     */
     @Override
     protected void handleMessage(Message message) {
         switch (message.getType()) {
             case RECONFIGURATION_REQUEST:
+                // Requête de reconfiguration d'un moniteur
                 handleReconfigurationRequest(message);
                 break;
             case ACTION_RESULT:
+                // Résultat d'une action exécutée par une machine
                 handleActionResult(message);
                 break;
             default:
@@ -47,6 +64,10 @@ public class RLRACentralized extends BaseAgent {
         }
     }
 
+    /**
+     * Traite une requête de reconfiguration
+     * @param message Message contenant les détails de la requête
+     */
     private void handleReconfigurationRequest(Message message) {
         Map<String, Object> request = (Map<String, Object>) message.getPayload();
         String affectedMachine = (String) request.get("affectedMachine");
@@ -54,23 +75,30 @@ public class RLRACentralized extends BaseAgent {
 
         System.out.println("[" + id + "] Processing reconfiguration request for " + affectedMachine);
 
-        // Decide on reconfiguration strategy
+        // Décider de la stratégie de reconfiguration
         String strategy = decidePlan(affectedMachine, issue);
 
-        // Execute the plan
+        // Exécuter le plan choisi
         executePlan(strategy, affectedMachine);
 
-        // Notify monitors
+        // Notifier tous les moniteurs du plan
         notifyMonitors(strategy);
     }
 
+    /**
+     * Traite le résultat d'une action exécutée
+     * @param message Message contenant le résultat
+     */
     private void handleActionResult(Message message) {
         String result = (String) message.getPayload();
         System.out.println("[" + id + "] Machine reported: " + result);
     }
 
     /**
-     * Centralized decision logic: analyze situation and choose strategy.
+     * Logique de décision centralisée : analyse la situation et choisit la stratégie
+     * @param affectedMachine Machine affectée par le problème
+     * @param issue Description du problème
+     * @return Stratégie de reconfiguration choisie
      */
     private String decidePlan(String affectedMachine, String issue) {
         MachineAgent machine = machines.get(affectedMachine);
@@ -80,23 +108,25 @@ public class RLRACentralized extends BaseAgent {
 
         MachineState state = machine.getState();
 
-        // Strategy selection based on issue type
+        // Sélection de stratégie basée sur le type de problème
         if (issue.contains("fail")) {
-            // For machine failure, try bypass or reassignment
+            // Pour une panne machine, essayer réaffectation ou contournement
             if (hasBackupMachine(affectedMachine)) {
-                return "STRATEGY_REASSIGNMENT";
+                return "STRATEGY_REASSIGNMENT";  // Réaffecter à une machine de secours
             } else {
-                return "STRATEGY_BYPASS";
+                return "STRATEGY_BYPASS";  // Contourner la machine défaillante
             }
         } else if (issue.contains("slow")) {
-            return "STRATEGY_ACCELERATION";
+            return "STRATEGY_ACCELERATION";  // Accélérer la machine lente
         } else {
-            return "STRATEGY_BYPASS";
+            return "STRATEGY_BYPASS";  // Stratégie par défaut
         }
     }
 
     /**
-     * Execute the chosen reconfiguration plan.
+     * Exécute le plan de reconfiguration choisi
+     * @param strategy Stratégie à exécuter
+     * @param affectedMachine Machine concernée
      */
     private void executePlan(String strategy, String affectedMachine) {
         switch (strategy) {
@@ -112,9 +142,14 @@ public class RLRACentralized extends BaseAgent {
             default:
                 break;
         }
+        // Enregistrer dans l'historique
         reconfigurationHistory.add(strategy + " for " + affectedMachine);
     }
 
+    /**
+     * Exécute la stratégie de contournement
+     * @param affectedMachine Machine à contourner
+     */
     private void executionBypass(String affectedMachine) {
         System.out.println("[" + id + "] Executing BYPASS strategy for " + affectedMachine);
         MachineAgent machine = machines.get(affectedMachine);
@@ -123,9 +158,14 @@ public class RLRACentralized extends BaseAgent {
         }
     }
 
+    /**
+     * Exécute la stratégie de réaffectation
+     * Trouve une machine de secours opérationnelle et lui réaffecte le travail
+     * @param affectedMachine Machine défaillante
+     */
     private void executeReassignment(String affectedMachine) {
         System.out.println("[" + id + "] Executing REASSIGNMENT strategy for " + affectedMachine);
-        // Find backup machine
+        // Trouver une machine de secours
         for (String machineId : machines.keySet()) {
             MachineAgent machine = machines.get(machineId);
             if (!machineId.equals(affectedMachine) && machine.getState().getStatus() == MachineState.Status.OPERATIONAL) {
@@ -135,11 +175,21 @@ public class RLRACentralized extends BaseAgent {
         }
     }
 
+    /**
+     * Exécute la stratégie d'accélération
+     * Augmente la vitesse de traitement de la machine
+     * @param affectedMachine Machine à accélérer
+     */
     private void executeAcceleration(String affectedMachine) {
         System.out.println("[" + id + "] Executing ACCELERATION strategy for " + affectedMachine);
         sendMessage(affectedMachine, Message.MessageType.EXECUTE_ACTION, "ACCELERATE");
     }
 
+    /**
+     * Vérifie s'il existe une machine de secours opérationnelle
+     * @param affectedMachine Machine défaillante
+     * @return true s'il existe une machine de secours, false sinon
+     */
     private boolean hasBackupMachine(String affectedMachine) {
         for (String machineId : machines.keySet()) {
             MachineAgent machine = machines.get(machineId);
@@ -150,6 +200,10 @@ public class RLRACentralized extends BaseAgent {
         return false;
     }
 
+    /**
+     * Notifie tous les moniteurs du plan de reconfiguration
+     * @param strategy Stratégie choisie
+     */
     private void notifyMonitors(String strategy) {
         for (MonitorAgent monitor : monitors.values()) {
             sendMessage(monitor.getId(), Message.MessageType.RECONFIGURATION_PLAN,
@@ -157,6 +211,10 @@ public class RLRACentralized extends BaseAgent {
         }
     }
 
+    /**
+     * Retourne l'historique des reconfigurations
+     * @return Copie de la liste d'historique
+     */
     public List<String> getReconfigurationHistory() {
         return new ArrayList<>(reconfigurationHistory);
     }

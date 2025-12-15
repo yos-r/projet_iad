@@ -41,7 +41,7 @@
 
 ---
 
-## 1. Résumé Exécutif
+## 1. Résumé 
 
 Ce rapport présente la conception et l'implémentation d'un système multi-agents pour la gestion et la reconfiguration dynamique d'une usine intelligente de type cyber-physique (FESTO CP Factory). Le système développé permet la coordination automatique de machines de production distribuées sur plusieurs sites, avec des capacités d'adaptation en temps réel face aux défaillances, aux variations de demande et aux changements de production.
 

@@ -1,7 +1,7 @@
 import java.util.*;
 
 /**
- * Simulation framework for testing different RLRA architectures.
+ * Framework de simulation pour tester les differentes architectures RLRA
  */
 public class FactorySimulation {
     private BaseAgent rlra;
@@ -22,7 +22,7 @@ public class FactorySimulation {
     }
 
     /**
-     * Initialize factory with machines and monitors.
+     * usine avec machines et moniteurs
      */
     public void initializeFactory() {
         // Create machines for Site A
@@ -67,6 +67,7 @@ public class FactorySimulation {
         return monitor;
     }
 
+    // enregistrer agent avec RLRA
     private void registerAgentsWithRLRA(MonitorAgent monitorA, MonitorAgent monitorB,
                                        MachineAgent m1, MachineAgent m2, MachineAgent m3, MachineAgent m4) {
         if (rlra instanceof RLRACentralized) {
@@ -107,10 +108,10 @@ public class FactorySimulation {
         if (machine != null) {
             machine.simulateFailure(errorMessage);
 
-            // Find which monitor is responsible for this machine
+            // trouver moniteur de la machine
             for (MonitorAgent monitor : monitors.values()) {
                 if (monitor.getMonitoredMachines().containsKey(machineId)) {
-                    // Trigger reconfiguration request
+                    // declencher requete de reconfiguration
                     Map<String, Object> failureInfo = new HashMap<>();
                     failureInfo.put("affectedMachine", machineId);
                     failureInfo.put("issue", "Machine failure: " + errorMessage);
@@ -128,7 +129,7 @@ public class FactorySimulation {
     }
 
     /**
-     * Run the simulation for a number of steps.
+     * Simulation avec nombre d'étapes
      */
     public void run(int steps) {
         System.out.println("\n=== STARTING SIMULATION (" + steps + " steps) ===");
@@ -154,7 +155,7 @@ public class FactorySimulation {
     }
 
     /**
-     * Print simulation report.
+     * rapport de simulation
      */
     public void printReport() {
         System.out.println("\n=== SIMULATION REPORT ===");

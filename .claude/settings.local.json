@@ -3,7 +3,9 @@
     "allow": [
       "Bash(javac:*)",
       "Bash(java:*)",
-      "Bash(Select-String -Pattern \"error\" -Context 2)"
+      "Bash(Select-String -Pattern \"error\" -Context 2)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

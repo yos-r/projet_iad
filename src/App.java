@@ -1,83 +1,93 @@
 /**
- * Main application demonstrating three RLRA architectures for factory reconfiguration.
+ * Application principale démontrant trois architectures RLRA pour la reconfiguration d'usine.
  *
- * This application simulates a FESTO CP Factory with a multi-agent system that handles
- * dynamic reconfiguration in response to machine failures, production peaks, and other anomalies.
+ * Cette application simule une usine FESTO CP Factory avec un système multi-agents qui gère
+ * la reconfiguration dynamique en réponse aux pannes de machines, pics de production et autres anomalies.
  *
- * Features demonstrated:
- * 1. Three RLRA architectures (Centralized, Modular, Distributed)
- * 2. Custom agents (ConveyorAgent, AssemblyAgent)
- * 3. Inter-agent interaction scenarios (6 scenarios)
- * 4. Advanced reconfiguration scenarios (4 scenarios)
- * 5. Communication protocol and conflict resolution
+ * Fonctionnalités démontrées :
+ * 1. Trois architectures RLRA (Centralisée, Modulaire, Distribuée)
+ * 2. Agents personnalisés (ConveyorAgent, AssemblyAgent)
+ * 3. Scénarios d'interaction inter-agents (6 scénarios)
+ * 4. Scénarios de reconfiguration avancés (4 scénarios)
+ * 5. Protocole de communication et résolution de conflits
  */
 public class App {
+    /**
+     * Point d'entrée principal de l'application
+     * @param args Arguments en ligne de commande (arch, interactions, scenarios, all, help)
+     */
     public static void main(String[] args) throws Exception {
         if (args.length > 0) {
             String mode = args[0].toLowerCase();
             switch (mode) {
                 case "arch":
+                    // Démontrer uniquement les trois architectures RLRA
                     demonstrateArchitectures();
                     break;
                 case "interactions":
+                    // Exécuter les 6 scénarios d'interaction
                     InteractionScenarios.runAll();
                     break;
                 case "scenarios":
+                    // Exécuter les 4 scénarios de reconfiguration avancés
                     ReconfigurationScenarios.runAll();
                     break;
                 case "all":
+                    // Démonstration complète
                     runFullDemo();
                     break;
                 case "help":
+                    // Afficher l'aide
                     printHelp();
                     break;
                 default:
-                    System.out.println("Unknown mode: " + mode);
+                    System.out.println("Mode inconnu : " + mode);
                     printHelp();
             }
         } else {
-            // Default: run full demo
+            // Par défaut : exécuter la démo complète
             runFullDemo();
         }
     }
 
     /**
-     * Run full demonstration of all features
+     * Exécute la démonstration complète de toutes les fonctionnalités
      */
     private static void runFullDemo() {
         System.out.println("╔" + "═".repeat(50) + "╗");
         System.out.println("║" + " ".repeat(8) + "FESTO CP Factory - Complete Demo" + " ".repeat(9) + "║");
         System.out.println("╚" + "═".repeat(50) + "╝\n");
 
-        System.out.println("1. Running RLRA Architecture Demonstrations\n");
+        System.out.println("1. Exécution des démonstrations d'architectures RLRA\n");
         demonstrateArchitectures();
 
-        System.out.println("\n\n2. Running Inter-Agent Interaction Scenarios\n");
+        System.out.println("\n\n2. Exécution des scénarios d'interaction inter-agents\n");
         InteractionScenarios.runAll();
 
-        System.out.println("\n3. Running Advanced Reconfiguration Scenarios\n");
+        System.out.println("\n3. Exécution des scénarios de reconfiguration avancés\n");
         ReconfigurationScenarios.runAll();
 
         System.out.println("\n" + "═".repeat(70));
-        System.out.println("COMPLETE DEMONSTRATION FINISHED");
+        System.out.println("DÉMONSTRATION COMPLÈTE TERMINÉE");
         System.out.println("═".repeat(70) + "\n");
     }
 
     /**
-     * Demonstrate all three architectures
+     * Démontre les trois architectures RLRA (Centralisée, Modulaire, Distribuée)
      */
     private static void demonstrateArchitectures() {
         demonstrateCentralizedArchitecture();
-        MessageBroker.getInstance().restart();  // Restart broker between architectures
+        MessageBroker.getInstance().restart();  // Redémarrer le broker entre les architectures
         System.out.println("\n" + "=".repeat(50) + "\n");
         demonstrateModularArchitecture();
-        MessageBroker.getInstance().restart();  // Restart broker between architectures
+        MessageBroker.getInstance().restart();  // Redémarrer le broker entre les architectures
         System.out.println("\n" + "=".repeat(50) + "\n");
         demonstrateDistributedArchitecture();
     }
 
     /**
-     * Demonstrates the Centralized RLRA architecture.
+     * Démontre l'architecture RLRA Centralisée
+     * Un seul agent RLRA prend toutes les décisions de reconfiguration
      */
     private static void demonstrateCentralizedArchitecture() {
         System.out.println("1. CENTRALIZED RLRA ARCHITECTURE");
@@ -86,24 +96,25 @@ public class App {
         FactorySimulation simulation = new FactorySimulation(RLRAFactory.ArchitectureType.CENTRALIZED);
         simulation.initializeFactory();
 
-        // Run simulation
+        // Exécuter la simulation initiale
         simulation.run(2);
 
-        // Simulate a machine failure
-        System.out.println("\n[SCENARIO] Running MACHINE_FAILURE scenario using CENTRALIZED RLRA");
-        System.out.println("[SCENARIO] Simulating Spindle motor failure on M2_Machining");
+        // Simuler une panne de machine
+        System.out.println("\n[SCENARIO] Exécution du scénario MACHINE_FAILURE avec RLRA CENTRALISÉ");
+        System.out.println("[SCENARIO] Simulation d'une panne moteur sur M2_Machining");
         simulation.simulateMachineFailure("M2_Machining", "Spindle motor failure");
 
-        // Continue simulation
+        // Continuer la simulation
         simulation.run(3);
 
-        // Print results
+        // Afficher les résultats
         simulation.printReport();
         simulation.stop();
     }
 
     /**
-     * Demonstrates the Modular (Composite) RLRA architecture.
+     * Démontre l'architecture RLRA Modulaire (Composite)
+     * L'agent RLRA est divisé en trois modules : Monitor, Learner, Executor
      */
     private static void demonstrateModularArchitecture() {
         System.out.println("2. MODULAR (COMPOSITE) RLRA ARCHITECTURE");
@@ -112,24 +123,25 @@ public class App {
         FactorySimulation simulation = new FactorySimulation(RLRAFactory.ArchitectureType.MODULAR);
         simulation.initializeFactory();
 
-        // Run simulation
+        // Exécuter la simulation initiale
         simulation.run(2);
 
-        // Simulate a machine failure
-        System.out.println("\n[SCENARIO] Running MACHINE_FAILURE scenario using MODULAR RLRA");
-        System.out.println("[SCENARIO] Simulating Gripper malfunction on M3_Assembly");
+        // Simuler une panne de machine
+        System.out.println("\n[SCENARIO] Exécution du scénario MACHINE_FAILURE avec RLRA MODULAIRE");
+        System.out.println("[SCENARIO] Simulation d'un dysfonctionnement du préhenseur sur M3_Assembly");
         simulation.simulateMachineFailure("M3_Assembly", "Gripper malfunction");
 
-        // Continue simulation
+        // Continuer la simulation
         simulation.run(3);
 
-        // Print results
+        // Afficher les résultats
         simulation.printReport();
         simulation.stop();
     }
 
     /**
-     * Demonstrates the Distributed RLRA architecture.
+     * Démontre l'architecture RLRA Distribuée
+     * Décisions locales par coordinateurs de site + superviseur global pour résolution de conflits
      */
     private static void demonstrateDistributedArchitecture() {
         System.out.println("3. DISTRIBUTED RLRA ARCHITECTURE");
@@ -138,42 +150,42 @@ public class App {
         FactorySimulation simulation = new FactorySimulation(RLRAFactory.ArchitectureType.DISTRIBUTED);
         simulation.initializeFactory();
 
-        // Run simulation
+        // Exécuter la simulation initiale
         simulation.run(2);
 
-        // Simulate a machine failure
-        System.out.println("\n[SCENARIO] Running MACHINE_FAILURE scenario using DISTRIBUTED RLRA");
-        System.out.println("[SCENARIO] Simulating Conveyor belt failure on M1_Distribution");
-        System.out.println("[SCENARIO] Testing multi-site coordination and conflict resolution");
+        // Simuler une panne de machine
+        System.out.println("\n[SCENARIO] Exécution du scénario MACHINE_FAILURE avec RLRA DISTRIBUÉ");
+        System.out.println("[SCENARIO] Simulation d'un blocage du convoyeur sur M1_Distribution");
+        System.out.println("[SCENARIO] Test de coordination multi-sites et résolution de conflits");
         simulation.simulateMachineFailure("M1_Distribution", "Conveyor belt stuck");
 
-        // Continue simulation
+        // Continuer la simulation
         simulation.run(3);
 
-        // Print results
+        // Afficher les résultats
         simulation.printReport();
         simulation.stop();
     }
 
     /**
-     * Print usage information
+     * Affiche les informations d'utilisation du programme
      */
     private static void printHelp() {
         System.out.println("\n" + "═".repeat(70));
-        System.out.println("FESTO CP Factory - Multi-Agent Reconfiguration System");
+        System.out.println("FESTO CP Factory - Système de Reconfiguration Multi-Agents");
         System.out.println("═".repeat(70));
-        System.out.println("\nUsage: java App [mode]\n");
-        System.out.println("Modes:");
-        System.out.println("  (none/all)     Run complete demonstration (default)");
-        System.out.println("  arch           Run RLRA architecture demonstrations only");
-        System.out.println("  interactions   Run inter-agent interaction scenarios");
-        System.out.println("  scenarios      Run advanced reconfiguration scenarios");
-        System.out.println("  help           Display this help message");
-        System.out.println("\nExamples:");
-        System.out.println("  java App                  # Full demo");
-        System.out.println("  java App arch             # Architectures only");
-        System.out.println("  java App interactions     # Interaction scenarios");
-        System.out.println("  java App scenarios        # Reconfiguration scenarios");
+        System.out.println("\nUtilisation : java App [mode]\n");
+        System.out.println("Modes :");
+        System.out.println("  (aucun/all)    Exécuter la démonstration complète (par défaut)");
+        System.out.println("  arch           Exécuter les démonstrations d'architectures RLRA uniquement");
+        System.out.println("  interactions   Exécuter les scénarios d'interaction inter-agents");
+        System.out.println("  scenarios      Exécuter les scénarios de reconfiguration avancés");
+        System.out.println("  help           Afficher ce message d'aide");
+        System.out.println("\nExemples :");
+        System.out.println("  java App                  # Démo complète");
+        System.out.println("  java App arch             # Architectures uniquement");
+        System.out.println("  java App interactions     # Scénarios d'interaction");
+        System.out.println("  java App scenarios        # Scénarios de reconfiguration");
         System.out.println("\n" + "═".repeat(70) + "\n");
     }
 }
